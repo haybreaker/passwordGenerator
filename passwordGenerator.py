@@ -1,6 +1,6 @@
-##Password Generator & Storage Application
-##Company: Haybreaker Computing
-##Author: Jesse Hayward
+## Password Generator & Storage Application
+## Company: Haybreaker Computing
+## Author: Jesse Hayward
 
 import os
 import random
