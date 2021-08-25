@@ -1,5 +1,5 @@
 # passwordGenerator
-PasswordGenerator Published for Use within an Organisation, using large scale randomization so even open source, very difficult to crack
+PasswordGenerator published for use within a private organisation, using large scale randomization so even open source, very difficult to crack
 
 This project was undertaken for a corporate service desk environment to ensure any new user accounts or password resets were done with randomness
 to ensure security and no standards or duplicate passwords.
