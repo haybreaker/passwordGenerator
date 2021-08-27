@@ -1,7 +1,5 @@
 ##Password Generator & Storage Application
-##Company: Haybreaker Computing
 ##Author: Jesse Hayward
-
 import csv  
 import datetime
 import getpass
@@ -18,9 +16,7 @@ def WelcomeScreen():
     print("#        for Peninsula Health          #")
     print("#          by Jesse Hayward            #")
     print("########################################")
-    print("\n\n")
-    print("1. Generate Password (g)")
-    print("2. Review last password for user (r)")
+    print("\n\n-- User menu (use entry in brackets) --\n1. Generate Password (g)\n2. Review last password for user (r)\n3. Exit Console (exit)")
 
 ## This function copies the generated password into the clipboard for easy pasting into AD
 def CopyToClip(password):
@@ -29,33 +25,24 @@ def CopyToClip(password):
     r.clipboard_clear()
     r.clipboard_append(password)
     r.update()
-    r.destroy
-
-    print('\033[4m\033[1m' + 'Password Copied to Your Clipboard' + '\033[4m\033[0m')
+    r.destroy()
 
 ## Function for pushing latest password generation to a csv file for recalling later / auditing
 def PushToCSV(password, username, system):
 
+    ## Declare variables so we can use them dynamically through process and easier to change details later
     dateString = datetime.date.today().strftime("%d-%m-%y")
     currentUser = getpass.getuser()
+    fields = [username, password, system, dateString, currentUser]
 
-    fields=[username, password, system, dateString, currentUser]
     with open('passRecord.csv', 'a+', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(fields)
-
-## This function takes input and returns it
-def MenuInput():
-    reply = input(">> ")
-    return reply
+        csv.writer(f).writerow(fields)
 
 ## Function to print last password for a username
 def PrintLastPass(username):
     Columns = ['User', 'Password', 'Sys', 'DateSet', 'AdminName']
     os.system('cls')
-    print("######################################################\n")
-    print(Columns)
-    print('\n')
+    print("######################################################\n\n" + str(Columns) + "\n");
 
     with open("passRecord.csv", "r") as f:
         reader = csv.reader(f, delimiter=',')
@@ -64,52 +51,36 @@ def PrintLastPass(username):
                 print(lines)
 
     print('\n')
+
 ## Corrector function to take final password and ensure it reaches the conditions for passwords
 def Corrector(newLetters):
 
     containsNumber = False
-
     for letter in newLetters:
         if letter.isnumeric() == True:
             containsNumber = True
-
     if containsNumber == False: 
         newLetters.append(random.randint(1,99))
-
     return newLetters
 
 ## Function polls a document of 3000 entries to choose a suitbalse base dictionary word (easier to remember)
 def RandomWordSelector(length):
 
     ##Poll Acceptable words from a document 
-
     ##Go through document and get enough reads for loops for word combinations as well as single words
-    ##Read number 1
     f = open('words.dat','r')
-    read1 = list(f.readlines())
-    f.close()
-    ##Read number 2
-    f = open('words.dat', 'r')
-    read2 = list(f.readlines())
-    f.close()
+    read = list(f.readlines())
 
-    ##Declare initial variables
     acceptableWords = list()
-    for line in (read1):
+    for line in (read):
         if len(line) == length: 
                 acceptableWords.append(line)
-                ##print(len(acceptableWords))
-        for line2 in (read2):
+        for line2 in (read):
                 doubleWord = line.strip() + line2.strip()
                 if len(doubleWord) == length:
                     acceptableWords.append(doubleWord)
-                ##print(len(acceptableWords))
 
-    ## Uncomment this to print all possible unaltered combinations of words print(acceptableWords)
-    ##Take from the acceptable word list and choose a random
     word = random.choice(acceptableWords)
-    
-    ##Return the chosen word to the password generator
     return word
 
 ## Once a dictionary word has been selected this dictionary word gets substituted with some numbers (still human readable but harder to crack)
@@ -124,56 +95,61 @@ def Substitutor(tempPassword):
             if letter == j:
                 i = random.randint(0,20)
                 if i % 4 == 0:
-                    if swapableLetters.index(j) != 0: 
+                    if tempPassword.index(letter) != 0: 
                         letter = replacementNumbers[swapableLetters.index(j)]
         newLetters.append(letter)
 
     return newLetters
 
-## This file runs the functions of word selector and substitutor to get a password and return it to the intial function request for a password
-def GeneratePassword(length, username, system):
+def GetPassVars():
+    username = input("What is the user's username >> ")
+    length = int(input("What length should the password be >> "))
+    system = input("What system is this password for (AD/Clover/IPM/Etc) >> ")
+    return [username, length, system]
 
-    tempPassword = RandomWordSelector(length)
-    passwordAsList = Substitutor(tempPassword)
+## This file runs the functions of word selector and substitutor to get a password and return it to the intial function request for a password
+def GeneratePassword(passVars):
+
+    ## Get variables to understand password needs for the user. 
+    username = str(passVars[0])
+    length = int(passVars[1])
+    system = str(passVars[2])
+    passwordLiked = ''
+
+    ## Go through 3 step process of randomization to build a good random password
+    wordsUsed = RandomWordSelector(length)
+    passwordAsList = Substitutor(wordsUsed)
     passwordAsString = ''.join(str(v) for v in Corrector(passwordAsList))
     try:
         password = passwordAsString.capitalize()
     except: 
         password = passwordAsString
         print("Password contains first letter as number, please add a Capital")
-
     CopyToClip(password)
     PushToCSV(password, username, system)
-    return password
 
-## This function re-runs the process if the password isn't desirable
-def RegeneratePassword(length, username, system):
-    password = GeneratePassword(length, username, system)
-    print ('Your generated password is :    ' + password)
+    ##Generate in-built functional re-roll ability using recursion, avoiding oOfN Problems
+    os.system('cls')
+    print("######################################################");
+    print("\nYour generated password is :    " + password)
+    print('\n\033[4m\033[1m' + 'Password Copied to Your Clipboard' + '\033[4m\033[0m')
+    passwordLiked = input("\nDid you like that password (y/n) : >> ").lower()
+    if passwordLiked == 'n':
+        GeneratePassword(passVars)
 
 ## This is the main menu that calls all other function in relation to user inputs and requests
 def MenuAction(reply):
-    if reply == "g":
-        username = input("What is the user's username >> ")
-        length = input("What length should the password be >> ")
-        system = input("What system is this password for (AD/Clover/IPM/Etc) >> ")
-        length = int(length)
-        password = GeneratePassword(length, username, system)
-        print("Your generated password is :    " + password)
-        passwordLiked = input("Did you like that password (y/n) : >> ").lower()
-        while passwordLiked == 'n':
-            RegeneratePassword(length, username, system)
-            passwordLiked = input('Is this better (y/n) >> ').lower()
-        print("\n#######################################")
-        print("\nThanks for using our tool")
-        input("\n\nPress Enter to Continue >> ")
+    if reply.lower() == "g":
+        GeneratePassword(GetPassVars())
         WelcomeScreen()
-    elif reply == 'r':
+    elif reply.lower() == 'r':
         username = input("Please enter the username querying >> ")
         PrintLastPass(username)
         input("Please hit enter to continue >> ")
         WelcomeScreen()
-    elif reply == '':
+    elif reply.lower() == '':
         print("Empty input try again >> ")
+    elif reply.lower() == 'exit':
+        print("Thanks for using our tool :)")
     else:
         print("That's not a valid menu entry >> ")
