@@ -5,7 +5,7 @@ import os
 import random
 import string
 from tkinter import Tk
-from fun import *
+from fun2 import *
 
 ##Generate input for reply null-safe so it knows to run input in menu
 reply = "defaultMenuInput"
