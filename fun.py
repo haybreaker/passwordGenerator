@@ -67,20 +67,19 @@ def Corrector(newLetters):
 def RandomWordSelector(length):
 
     ##Poll Acceptable words from a document 
-    ##Go through document and get enough reads for loops for word combinations as well as single words
-    f = open('words.dat','r')
-    read = list(f.readlines())
+    f = open('words.dat').read().splitlines()
+    wordLength = 0
+    tempWord1 = ''; tempWord2 = ''
+    while wordLength != length:
+        tempWord1 = random.choice(f)
+        tempWord2 = random.choice(f)
+        doubleWord = tempWord1.strip() + tempWord2.strip()
+        if len(tempWord1) == length:
+            word = tempWord1
+        if len(doubleWord) == length:
+            word = doubleWord
+        wordLength = len(doubleWord)
 
-    acceptableWords = list()
-    for line in (read):
-        if len(line) == length: 
-                acceptableWords.append(line)
-        for line2 in (read):
-                doubleWord = line.strip() + line2.strip()
-                if len(doubleWord) == length:
-                    acceptableWords.append(doubleWord)
-
-    word = random.choice(acceptableWords)
     return word
 
 ## Once a dictionary word has been selected this dictionary word gets substituted with some numbers (still human readable but harder to crack)
